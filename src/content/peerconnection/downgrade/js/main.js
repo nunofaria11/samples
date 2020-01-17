@@ -208,11 +208,11 @@ function downgrade() {
         return pc1.createOffer(offerOptions);
       })
       .then(offer => {
-        console.log(`[PC1] Offer created.\n`, offer.sdp);
+        console.log(`[PC1] Offer created.\n${offer.sdp}`, offer);
         return pc1.setLocalDescription(offer);
       })
       .then(() => {
-        console.log(`[PC2] Offer received.\n`, pc1.localDescription.sdp);
+        console.log(`[PC2] Offer received.\n${pc1.localDescription.sdp}`, pc1.localDescription);
         return pc2.setRemoteDescription(pc1.localDescription);
       })
       .then(() => {
@@ -220,11 +220,11 @@ function downgrade() {
         return pc2.createAnswer();
       })
       .then(answer => {
-        console.log(`[PC2] Setting local description.\n`, answer.sdp);
+        console.log(`[PC2] Setting local description.\n${answer.sdp}`, answer);
         return pc2.setLocalDescription(answer);
       })
       .then(() => {
-        console.log(`[PC1] Answer received.\n`, pc2.localDescription.sdp);
+        console.log(`[PC1] Answer received.\n${pc2.localDescription.sdp}`, pc2.localDescription);
         return pc1.setRemoteDescription(pc2.localDescription);
       });
 }
