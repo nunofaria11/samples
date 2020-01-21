@@ -10,13 +10,16 @@
 
 const startButton = document.getElementById('startButton');
 const callButton = document.getElementById('callButton');
+const upgradeButton = document.getElementById('upgradeButton');
 const downgradeButton = document.getElementById('downgradeButton');
 const hangupButton = document.getElementById('hangupButton');
 callButton.disabled = true;
 hangupButton.disabled = true;
+upgradeButton.disabled = true;
 downgradeButton.disabled = true;
 startButton.onclick = start;
 callButton.onclick = call;
+upgradeButton.onclick = upgrade;
 downgradeButton.onclick = downgrade;
 hangupButton.onclick = hangup;
 
@@ -49,7 +52,7 @@ let pc1;
 let pc2;
 const offerOptions = {
   offerToReceiveAudio: 1,
-  offerToReceiveVideo: 1
+  offerToReceiveVideo: 0
 };
 
 function getName(pc) {
@@ -73,7 +76,7 @@ function start() {
   navigator.mediaDevices
       .getUserMedia({
         audio: true,
-        video: true
+        video: false
       })
       .then(gotStream)
       .catch(e => alert(`getUserMedia() error: ${e.name}`));
@@ -81,7 +84,7 @@ function start() {
 
 function call() {
   callButton.disabled = true;
-  downgradeButton.disabled = false;
+  upgradeButton.disabled = false;
   hangupButton.disabled = false;
   console.log('Starting call');
   startTime = window.performance.now();
@@ -175,9 +178,34 @@ function onIceStateChange(pc, event) {
   }
 }
 
+function upgrade() {
+  upgradeButton.disabled = true;
+  downgradeButton.disabled = false;
+
+  navigator.mediaDevices
+      .getUserMedia({video: true})
+      .then(stream => {
+        const videoTracks = stream.getVideoTracks();
+        if (videoTracks.length > 0) {
+          console.log(`Using video device: ${videoTracks[0].label}`);
+        }
+        localStream.addTrack(videoTracks[0]);
+        localVideo.srcObject = null;
+        localVideo.srcObject = localStream;
+        pc1.addTrack(videoTracks[0], localStream);
+        return pc1.createOffer();
+      })
+      .then(offer => pc1.setLocalDescription(offer))
+      .then(() => pc2.setRemoteDescription(pc1.localDescription))
+      .then(() => pc2.createAnswer())
+      .then(answer => pc2.setLocalDescription(answer))
+      .then(() => pc1.setRemoteDescription(pc2.localDescription));
+}
+
 // Downgrade should remove the video track from the peer connection
 function downgrade() {
   downgradeButton.disabled = true;
+  upgradeButton.disabled = false;
 
   localStream.stopped = true;
 
